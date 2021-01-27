@@ -20,12 +20,24 @@ Route.get('/', () => {
     return { greeting: 'Hello world in JSON' }
 })
 
-Route.post('users', 'UserController.store')
+// Rotas não autenticadas
+// Validator valida os dados de entrada conforme as regras do validator
+Route.post('users', 'UserController.store').validator('User')
 
-Route.post('sessions', 'SessionController.store')
+Route.post('sessions', 'SessionController.store').validator('Session')
 
-Route.post('passwords', 'ForgotPasswordController.store')
-Route.put('passwords', 'ForgotPasswordController.update')
+Route.post('passwords', 'ForgotPasswordController.store').validator('ForgotPassword')
+Route.put('passwords', 'ForgotPasswordController.update').validator('ResetPassword')
 
 Route.get('files/:id', 'FileController.show')
-Route.post('files', 'FileController.store')
+
+// Rotas autenticadas
+// API Only para não pegar as rotas de formulário
+// Map com array dizendo quais métodos vão ser validados e quais validators serão utilizados para isso
+Route.group(() => {
+    Route.post('files', 'FileController.store')
+
+    Route.resource('projects', 'ProjectController').apiOnly().validator(new Map([[['projects.store'], ['Project']]]))
+    Route.resource('projects.tasks', 'TaskController').apiOnly().validator(new Map([[['projects.tasks.store'], ['Task']]]))
+
+}).middleware('auth')
